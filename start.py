@@ -1404,9 +1404,10 @@ class MenuManager:
         print("\n=== MaiBot 控制台 ===")
         print("制作By MaiBot Team @MotricSeven")
         print(f"版本 {ONEKEY_VERSION}")
-        print("一键包附加脚本仓库：https://github.com/DrSmoothl/MaiBotOneKey")
+        print("官方一键包附加脚本仓库：https://github.com/DrSmoothl/MaiBotOneKey")
         print("麦麦MaiBot主仓库：https://github.com/MaiM-with-u/MaiBot")
-        print("如果可以的话，希望您可以给这两个仓库点个Star！")
+        print("本一键包附加脚本仓库：https://github.com/laohutongzhi/MaiBotOneKey")
+        print("如果可以的话，希望您可以给上面的两个仓库点个Star！")
         print("======================")
         
         # 显示一言
@@ -1553,16 +1554,16 @@ def open_config_file() -> bool:
         logger.error("无效选择")
         return False
     name, path = config_files[int(choice) - 1]
-    code_exe = get_absolute_path('modules/vscode/Code.exe')
+    code_exe = get_absolute_path('modules/Notepad3/Notepad3.exe')
     if not os.path.exists(code_exe):
-        logger.error(f"找不到VSCode可执行文件 {code_exe}")
+        logger.error(f"找不到 Notepad3 可执行文件 {code_exe}")
         return False
     if not os.path.exists(path):
         logger.error(f"找不到配置文件 {path}")
         return False
     try:
         subprocess.run([code_exe, path], check=True)
-        logger.info(f"{name} 已使用 VSCode 打开")
+        logger.info(f"{name} 已使用 Notepad3 打开")
         return True
     except Exception as e:
         logger.error(f"打开文件失败: {e}")
