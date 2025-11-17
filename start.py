@@ -1538,7 +1538,7 @@ def open_config_file() -> bool:
     """快捷打开配置文件"""
     config_files = [
         ("MaiBot主配置", get_absolute_path('modules/MaiBot/config/bot_config.toml')),
-        ("MaiBot-LPMM知识库配置", get_absolute_path('modules/MaiBot/config/lpmm_config.toml')),
+        ("MaiBot模型配置", get_absolute_path('modules/MaiBot/config/model_config.toml')),
         ("MaiBot环境文件(.env)", get_absolute_path('modules/MaiBot/.env')),
         ("NapCat适配器配置", get_absolute_path('modules/MaiBot-Napcat-Adapter/config.toml')),
         # 可以继续添加更多配置文件
