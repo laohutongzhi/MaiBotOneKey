@@ -132,7 +132,6 @@ def is_first_run() -> bool:
     """检查是否是首次运行
     
     通过检查 runtime/.initialized 或 runtime/.gitkeep 文件是否存在来判断
-    如果文件不存在则为首次运行,创建标记文件并返回 True
     """
     runtime_dir = Path(__file__).parent / "runtime"
     new_marker = runtime_dir / ".initialized"
@@ -143,15 +142,7 @@ def is_first_run() -> bool:
         logger.info("检测到非首次运行 (标记文件存在)")
         return False
     
-    # 首次运行:创建标记文件
-    logger.info("首次运行检测: 未找到初始化标记文件,正在创建...")
-    try:
-        runtime_dir.mkdir(parents=True, exist_ok=True)
-        new_marker.write_text('initialized', encoding='utf-8')
-        logger.info("已创建初始化标记文件: .initialized")
-    except Exception as e:
-        logger.warning(f"创建初始化标记文件失败: {e}")
-    
+    logger.info("首次运行检测: 未找到初始化标记文件")
     return True
 
 def run_python_script(script_name: str) -> bool:
@@ -303,130 +294,28 @@ def main() -> None:
                 logger.error("NapCat初始化失败")
                 return
             
-            # 直接启动 HMML WebUI 让用户进行交互配置
             print("======================")
-            print("首次运行：即将启动 HMML WebUI 进行配置，请在浏览器中完成操作。")
-            print("如未自动打开，可手动访问: http://localhost:7998")
+            print("正在配置QQ适配器...")
             print("======================")
-
-            # 内联一个最小化的 HMML WebUI 启动逻辑（避免循环导入）
-            def _first_launch_hmml_webui():
-                import subprocess
-                from pathlib import Path
-                import time
-                base_dir = Path(__file__).parent
-
-                # 新版结构（允许 server.* 多种扩展 & 后端入口多名称）
-                new_frontend = base_dir / 'modules' / 'HMML2Panel'
-                new_backend = base_dir / 'modules' / 'HMML2Backend'
-                possible_server_files = [
-                    new_frontend / 'server.cjs',
-                    new_frontend / 'server.js',
-                    new_frontend / 'server.mjs',
-                ]
-                server_file = next((p for p in possible_server_files if p.exists()), None)
-                # node.exe：优先前端目录下，其次 runtime/nodejs/node.exe
-                node_candidates = [
-                    new_frontend / 'node.exe',
-                    base_dir / 'runtime' / 'nodejs' / 'node.exe'
-                ]
-                new_node = next((p for p in node_candidates if p.exists()), None)
-                backend_entry_candidates = [
-                    new_backend / 'start.py',
-                    new_backend / 'main.py',
-                    new_backend / 'app.py'
-                ]
-                new_backend_entry = next((p for p in backend_entry_candidates if p.exists()), None)
-
-                # 旧版结构
-                old_frontend = base_dir / 'modules' / 'HMMLPanel'
-                old_backend = base_dir / 'modules' / 'HMMLDemon'
-                old_node = base_dir / 'runtime' / 'nodejs' / 'node.exe'
-                old_server = old_frontend / 'server.cjs'
-                old_backend_js = old_backend / 'start.js'
-
-                # Python 解释器候选
-                py_candidates = [
-                    base_dir / 'runtime' / 'python31211' / 'python.exe',
-                    base_dir / 'runtime' / 'python31211' / 'bin' / 'python.exe'
-                ]
-                python_path = next((str(p) for p in py_candidates if p.exists()), None)
-
-                def _create_cmd_window(cwd: Path, command: str, title: str) -> bool:
-                    """在新窗口中启动命令(使用 start)，附带标题。"""
-                    try:
-                        # 统一使用 cmd /c start "窗口标题" 命令以确保新窗口
-                        wrapped = f'cmd /c start "{title}" {command}'
-                        subprocess.Popen(wrapped, cwd=str(cwd), shell=True)
-                        logger.info(f"已在新窗口启动: {title} -> {command}")
-                        return True
-                    except Exception as _e:
-                        logger.error(f"创建命令窗口失败: {title} / {command} 错误: {_e}")
-                        return False
-
-                # 优先新版
-                if new_frontend.is_dir() and new_backend.is_dir():
-                    missing = []
-                    if not new_node:
-                        missing.append('node.exe')
-                    if not server_file:
-                        missing.append('server.(cjs|js|mjs)')
-                    if not new_backend_entry:
-                        missing.append('后端入口 (start.py|main.py|app.py)')
-                    if missing:
-                        logger.error(f"HMML2 目录存在但缺少必要文件: {', '.join(missing)}")
-                        return False
-                    if not python_path:
-                        logger.error("未找到 Python 解释器，无法启动 HMML2 后端")
-                        return False
-                    front_cmd = f'start http://localhost:7998 && "{new_node}" "{server_file}"'
-                    back_cmd = f'"{python_path}" "{new_backend_entry}"'
-                    ok1 = _create_cmd_window(new_frontend, front_cmd, 'HMML2-Frontend')
-                    # 稍等片刻让前端端口监听再启动后端，减少初始连接失败概率
-                    if ok1:
-                        time.sleep(1.2)
-                    ok2 = _create_cmd_window(new_backend, back_cmd, 'HMML2-Backend') if ok1 else False
-                    if ok1 and ok2:
-                        logger.info("HMML2 WebUI 已在独立窗口启动 (前端+后端)")
-                        return True
-                    logger.error("HMML2 WebUI 启动失败")
-                    return False
-                # 回退旧版
-                if old_frontend.is_dir() and old_backend.is_dir():
-                    if not old_node.exists() or not old_server.exists() or not old_backend_js.exists():
-                        logger.error("旧版 HMML 目录缺少必要文件 (node.exe/server.cjs/start.js)")
-                        return False
-                    front_cmd = f'start http://localhost:7998 && "{old_node}" server.cjs'
-                    back_cmd = f'"{old_node}" start.js'
-                    ok1 = _create_cmd_window(old_frontend, front_cmd, 'HMML-Old-Frontend')
-                    if ok1:
-                        time.sleep(1.0)
-                    ok2 = _create_cmd_window(old_backend, back_cmd, 'HMML-Old-Backend') if ok1 else False
-                    if ok1 and ok2:
-                        logger.info("旧版 HMML WebUI 已在独立窗口启动")
-                        return True
-                    logger.error("旧版 HMML WebUI 启动失败")
-                    return False
-                logger.error("未找到任何可用的 HMML WebUI 结构 (HMML2 或 旧版)")
-                return False
-
-            if not _first_launch_hmml_webui():
-                print("启动 HMML WebUI 失败，可稍后从菜单手动启动。")
-                logger.error("首次运行时启动 HMML WebUI 失败")
-                
+            
+            if not run_python_script("config_qq_adapter.py"):
+                logger.error("QQ适配器配置失败")
+                return
+            
+            # 所有初始化步骤完成,创建标记文件
+            try:
+                runtime_dir = Path(__file__).parent / "runtime"
+                init_marker = runtime_dir / ".initialized"
+                runtime_dir.mkdir(parents=True, exist_ok=True)
+                init_marker.write_text('initialized', encoding='utf-8')
+                logger.info("初始化完成,已创建标记文件: .initialized")
+            except Exception as e:
+                logger.warning(f"创建初始化标记文件失败: {e}")
+            
             print("3秒后启动MaiBot Client...")
             safe_system_command("timeout /t 3 /nobreak > nul")
             safe_system_command("cls")
             
-            # 写入初始化完成标记（冪等，重复写入无影响）
-            try:
-                init_flag = Path(__file__).parent / 'runtime' / '.initialized'
-                init_flag.parent.mkdir(parents=True, exist_ok=True)
-                init_flag.write_text('initialized', encoding='utf-8')
-                logger.info("初始化完成标记已写入")
-            except Exception as e:
-                logger.warning(f"写入初始化完成标记失败: {e}")
-
             # 首次初始化后直接进入 start.py（主菜单/主逻辑）
             if not run_python_script("start.py"):
                 logger.error("首次运行后启动主程序失败")
