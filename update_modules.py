@@ -326,11 +326,11 @@ def main():
     # 硬编码的远程仓库URL（支持多个备用仓库）
     REMOTE_URLS = {
         'onekey': [
-            'https://gh.llkk.cc/https://github.com/DrSmoothl/MaiBotOneKey.git',
-            'https://github.moeyy.xyz/https://github.com/DrSmoothl/MaiBotOneKey.git',
-            'https://gitproxy.click/https://github.com/DrSmoothl/MaiBotOneKey.git',
-            'https://gitproxy.net/https://github.com/DrSmoothl/MaiBotOneKey.git',
-            'https://github.com/DrSmoothl/MaiBotOneKey.git'
+            'https://gh.llkk.cc/https://github.com/laohutongzhi/MaiBotOneKey.git',
+            'https://github.moeyy.xyz/https://github.com/laohutongzhi/MaiBotOneKey.git',
+            'https://gitproxy.click/https://github.com/laohutongzhi/MaiBotOneKey.git',
+            'https://gitproxy.net/https://github.com/laohutongzhi/MaiBotOneKey.git',
+            'https://github.com/laohutongzhi/MaiBotOneKey.git'
         ],
         'maibot': [
             'https://gh.llkk.cc/https://github.com/MaiM-with-u/MaiBot.git',
